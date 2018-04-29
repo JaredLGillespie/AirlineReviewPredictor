@@ -4,6 +4,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, confusion_matrix, recall_score, average_precision_score,precision_recall_curve, roc_curve, auc
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.feature_extraction import stop_words
 
 
 # Datatypes of each column
@@ -47,8 +48,12 @@ X_train, X_test, y_train, y_test = train_test_split(data['content'],
 
 # Vectorize
 # N-gram and Bigram
-ngram_size = 1
-vectorizer = CountVectorizer(ngram_range=(ngram_size, ngram_size))
+ngram_size = 2
+vectorizer = CountVectorizer(ngram_range=(ngram_size, ngram_size),
+                             # the analyzer determines how you split up your ngram, i think 'word' is default?
+                             # 'char' would be the character ngrams you were talking about
+                             analyzer='word',
+                             stop_words=stop_words.ENGLISH_STOP_WORDS)
 vectorizer.fit(X_train)
 train_ngram = vectorizer.transform(X_train)
 test_ngram = vectorizer.transform(X_test)
