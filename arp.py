@@ -1,4 +1,10 @@
 import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, confusion_matrix, recall_score, average_precision_score,precision_recall_curve, roc_curve, auc
+from sklearn.naive_bayes import MultinomialNB
+
 
 # Datatypes of each column
 dtype = {
@@ -33,3 +39,31 @@ data = data.drop(['link', 'title', 'author', 'date'], axis=1)
 print('Total: %s' % data.shape[0])
 print('Not Recommended: %s' % data.where(data['recommended'] == 0).dropna(how='all').shape[0])
 print('Recommended: %s' % data.where(data['recommended'] == 1).dropna(how='all').shape[0])
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(data['content'],
+                                                    data['recommended'],
+                                                    random_state=1)
+
+# Vectorize
+# N-gram and Bigram
+ngram_size = 1
+vectorizer = CountVectorizer(ngram_range=(ngram_size, ngram_size))
+vectorizer.fit(X_train)
+train_ngram = vectorizer.transform(X_train)
+test_ngram = vectorizer.transform(X_test)
+# Naive Bayes
+naive_bayes = MultinomialNB(alpha=1.0, class_prior=None, fit_prior=True)
+naive_bayes.fit(train_ngram, y_train)
+
+# predict the validation set
+predictions = naive_bayes.predict(test_ngram)
+
+
+# Validate
+print('Accuracy: ' + format(accuracy_score(y_test, predictions)))
+print('Precision: ' + format(precision_score(y_test, predictions)))
+print('Recall: ' + format(recall_score(y_test, predictions)))
+print('Confusion:\n' + format(confusion_matrix(y_test, predictions)))
+
+# Done
