@@ -28,3 +28,8 @@ data = pd.read_table('airline.csv', sep=',', dtype=dtype)
 
 # Remove unused columns
 data = data.drop(['link', 'title', 'author', 'date'], axis=1)
+
+# Describe data
+print('Total: %s' % data.shape[0])
+print('Not Recommended: %s' % data.where(data['recommended'] == 0).dropna(how='all').shape[0])
+print('Recommended: %s' % data.where(data['recommended'] == 1).dropna(how='all').shape[0])
