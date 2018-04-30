@@ -4,11 +4,26 @@ import pandas as pd
 import scikitplot as skplt
 from sklearn.feature_extraction import stop_words
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_selection import mutual_info_classif
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, confusion_matrix, recall_score, f1_score, brier_score_loss
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.preprocessing import StandardScaler
+from sklearn.naive_bayes import MultinomialNB, BernoulliNB
+from sklearn.linear_model import LogisticRegression
 from time import time
+
+
+def show_most_informative_features(vectorizer, clf, n=10):
+    feature_names = vectorizer.get_feature_names()
+    coefs_with_fns = sorted(zip(clf.coef_[0], feature_names))
+
+    print('Top Features:')
+    print('\tRecommended:')
+    for coef, fn in coefs_with_fns[:-(n + 1): -1]:
+        print('\t%.4f\t%s' % (coef, fn))
+
+    print('\n\tNot Recommended:')
+    for coef, fn in coefs_with_fns[:n]:
+        print('\t%.4f\t%s' % (coef, fn))
 
 
 # Datatypes of each column
@@ -57,49 +72,56 @@ vectorizer = TfidfVectorizer(min_df=2,  # Remove words only appearing in a singl
                              # the analyzer determines how you split up your ngram, i think 'word' is default?
                              # 'char' would be the character ngrams you were talking about
                              analyzer='word',
-                             stop_words=stop_words.ENGLISH_STOP_WORDS)
+                             stop_words=stop_words.ENGLISH_STOP_WORDS,
+                             max_features=10000)
 vectorizer.fit(X_train)
 train_ngram = vectorizer.transform(X_train)
-# scaling the data achieves worse results, but maybe its the ethical thing to do in data science?
-# train_ngram = StandardScaler(with_mean=False).fit_transform(train_ngram)
 test_ngram = vectorizer.transform(X_test)
 toc = time()
 print('Vectorization Time: %.02fs' % (toc - tic))
 
-# Naive Bayes
-tic = time()
-naive_bayes = MultinomialNB(alpha=1.0, class_prior=None, fit_prior=True)
-naive_bayes.fit(train_ngram, y_train)
-toc = time()
-print('Training Time: %0.2fs' % (toc - tic))
+classifiers = [
+    ['Naive Bayes', MultinomialNB(alpha=1.0, class_prior=None, fit_prior=True)],
+    ['Logistic Regression', LogisticRegression()]
+]
 
-# predict the validation set
-tic = time()
-predictions = naive_bayes.predict(test_ngram)
-toc = time()
-print('Prediction Time: %0.2fs' % (toc - tic))
+for name, classifier in classifiers:
+    print('%s%s%s' % ('-' * 20, name, '-' * 20))
+    tic = time()
+    classifier.fit(train_ngram, y_train)
+    toc = time()
+    print('Training Time: %0.2fs' % (toc - tic))
 
-predicted_probas = naive_bayes.predict_proba(test_ngram)
+    # predict the validation set
+    tic = time()
+    predictions = classifier.predict(test_ngram)
+    toc = time()
+    print('Prediction Time: %0.2fs' % (toc - tic))
 
+    predicted_probas = classifier.predict_proba(test_ngram)
 
-# Validate
-print('Accuracy: %0.3f' % accuracy_score(y_test, predictions))
-print('Precision: %0.3f' % precision_score(y_test, predictions))
-print('Recall: %0.3f' % recall_score(y_test, predictions))
-print('F1 Score: %0.3f' % f1_score(y_test, predictions))
-print('Brier Score: %0.3f' % brier_score_loss(y_test, predictions))
-print('Confusion:')
-conmat = np.array(confusion_matrix(y_test, predictions, labels=[1, 0]))
-confusion = pd.DataFrame(conmat, index=['positive', 'negative'],
-                         columns=['predicted_positive', 'predicted_negative'])
-print(confusion)
+    # Validate
+    print('Accuracy: %0.3f' % accuracy_score(y_test, predictions))
+    print('Precision: %0.3f' % precision_score(y_test, predictions))
+    print('Recall: %0.3f' % recall_score(y_test, predictions))
+    print('F1 Score: %0.3f' % f1_score(y_test, predictions))
+    print('Brier Score: %0.3f' % brier_score_loss(y_test, predictions))
+    print('Confusion:')
+    conmat = np.array(confusion_matrix(y_test, predictions, labels=[1, 0]))
+    confusion = pd.DataFrame(conmat, index=['positive', 'negative'],
+                             columns=['predicted_positive', 'predicted_negative'])
+    print(confusion)
 
-# ROC Curve
-skplt.metrics.plot_roc_curve(y_test, predicted_probas)
-plt.show()
+    # Important Features
+    print('Feature Count: %s' % len(vectorizer.get_feature_names()))
+    show_most_informative_features(vectorizer, classifier)
 
-# Precision-Recall Curve
-skplt.metrics.plot_precision_recall_curve(y_test, predicted_probas)
-plt.show()
+    # ROC Curve
+    skplt.metrics.plot_roc_curve(y_test, predicted_probas)
+
+    # Precision-Recall Curve
+    skplt.metrics.plot_precision_recall_curve(y_test, predicted_probas)
+
+    plt.show()
 
 # Done
