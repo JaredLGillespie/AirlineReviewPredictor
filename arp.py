@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scikitplot as skplt
+from sklearn.ensemble import AdaBoostClassifier
 from sklearn.feature_extraction import stop_words
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_selection import mutual_info_classif
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, confusion_matrix, recall_score, f1_score, brier_score_loss
-from sklearn.naive_bayes import MultinomialNB, BernoulliNB
-from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import MultinomialNB
 from time import time
 
 
@@ -81,6 +81,8 @@ toc = time()
 print('Vectorization Time: %.02fs' % (toc - tic))
 
 classifiers = [
+    ['AdaBoost (Naive Bayes)', AdaBoostClassifier(base_estimator=MultinomialNB(alpha=1.0, class_prior=None, fit_prior=True), n_estimators=100)],
+    ['AdaBoost (Logistic Regression)', AdaBoostClassifier(base_estimator=LogisticRegression(), n_estimators=100)],
     ['Naive Bayes', MultinomialNB(alpha=1.0, class_prior=None, fit_prior=True)],
     ['Logistic Regression', LogisticRegression()]
 ]
@@ -114,7 +116,10 @@ for name, classifier in classifiers:
 
     # Important Features
     print('Feature Count: %s' % len(vectorizer.get_feature_names()))
-    show_most_informative_features(vectorizer, classifier)
+
+    # AdaBoost doesn't give coefficients
+    if 'AdaBoost' not in name:
+        show_most_informative_features(vectorizer, classifier)
 
     # ROC Curve
     skplt.metrics.plot_roc_curve(y_test, predicted_probas)
