@@ -5,7 +5,7 @@ import scikitplot as skplt
 from sklearn.feature_extraction import stop_words
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, precision_score, confusion_matrix, recall_score, average_precision_score,precision_recall_curve, roc_curve, auc
+from sklearn.metrics import accuracy_score, precision_score, confusion_matrix, recall_score, f1_score
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.preprocessing import StandardScaler
 from time import time
@@ -86,6 +86,7 @@ predicted_probas = naive_bayes.predict_proba(test_ngram)
 print('Accuracy: %0.3f' % accuracy_score(y_test, predictions))
 print('Precision: %0.3f' % precision_score(y_test, predictions))
 print('Recall: %0.3f' % recall_score(y_test, predictions))
+print('F1 Score: %0.3f' % f1_score(y_test, predictions))
 print('Confusion:')
 conmat = np.array(confusion_matrix(y_test, predictions, labels=[1, 0]))
 confusion = pd.DataFrame(conmat, index=['positive', 'negative'],
@@ -94,6 +95,10 @@ print(confusion)
 
 # ROC Curve
 skplt.metrics.plot_roc_curve(y_test, predicted_probas)
+plt.show()
+
+# Precision-Recall Curve
+skplt.metrics.plot_precision_recall_curve(y_test, predicted_probas)
 plt.show()
 
 # Done
