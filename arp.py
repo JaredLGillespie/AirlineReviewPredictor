@@ -126,11 +126,11 @@ for name, classifier in classifiers:
 
     # ROC Curve
     skplt.metrics.plot_roc_curve(y_test, predicted_probas)
+    plt.savefig(name + 'roc curve.png')
 
     # Precision-Recall Curve
     skplt.metrics.plot_precision_recall_curve(y_test, predicted_probas)
-
-    #plt.show()
+    plt.savefig(name + 'precision recall curve.png')
 
 # ----- Cross Validation -----
 # Split data
@@ -188,10 +188,10 @@ for name, classifier in classifiers:
 
     # ROC Curve
     skplt.metrics.plot_roc_curve(Y, predicted_probas)
+    plt.savefig(name + 'roc curve.png')
 
     # Precision-Recall Curve
     skplt.metrics.plot_precision_recall_curve(Y, predicted_probas)
-
-    #plt.show()
+    plt.savefig(name + 'precision recall curve.png')
 
 # Done
